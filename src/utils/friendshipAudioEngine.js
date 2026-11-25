@@ -1,46 +1,82 @@
 /**
- * Web Audio API Engine for Friendship Song
- * Synthesizes acoustic guitar + piano chords and melody of iconic friendship themes,
- * with seamless fallback to custom /audio/friendship-song.mp3 if provided.
+ * Unified Audio Engine for DHruv.exe Birthday Website
+ * Manages background soundtrack ("Tera Yaar Hoon Main"), timeline synchronization,
+ * Web Audio synthesizers, chime effects, and sound control.
  */
 
-class FriendshipAudioEngine {
+class UnifiedAudioEngine {
   constructor() {
     this.ctx = null;
     this.masterGain = null;
-    this.isPlaying = false;
-    this.currentTime = 0;
-    this.duration = 240; // 4 minutes
-    this.timerId = null;
-    this.chordInterval = null;
     this.audioElement = null;
-    this.hasCustomFile = false;
+    this.isPlaying = false;
+    this.isMuted = false;
+    this.volume = 0.75;
+    this.currentTime = 0;
+    this.duration = 68; // 68s soundtrack loop (matches audio length)
     this.listeners = new Set();
+    this.synthLoopId = null;
+    this.isUsingSynth = false;
+
+    // Available audio sources in priority order
+    this.sources = [
+      '/audio/tera-yaar-hoon-main.wav',
+      '/audio/tera-yaar-hoon-main.mp3',
+      '/audio/friendship-song.mp3',
+      '/audio/birthday.mp3'
+    ];
+    this.currentSourceIdx = 0;
   }
 
   init() {
-    if (!this.ctx) {
+    // 1. Initialize Web Audio Context for chimes and synthesized effects
+    if (!this.ctx && (typeof window !== 'undefined')) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-      this.masterGain.connect(this.ctx.destination);
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.volume * 0.22, this.ctx.currentTime);
+        this.masterGain.connect(this.ctx.destination);
+      }
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    if (this.ctx && this.ctx.state === 'suspended') {
+      this.ctx.resume().catch(() => {});
     }
 
-    if (!this.audioElement) {
+    // 2. Initialize HTML5 Audio Element for the real music track
+    if (!this.audioElement && (typeof window !== 'undefined')) {
       this.audioElement = new Audio();
-      this.audioElement.src = '/audio/friendship-song.mp3';
-      this.audioElement.preload = 'metadata';
-      this.audioElement.oncanplay = () => {
-        this.hasCustomFile = true;
+      this.audioElement.src = this.sources[0];
+      this.audioElement.loop = true;
+      this.audioElement.volume = this.isMuted ? 0 : this.volume;
+
+      this.audioElement.onloadedmetadata = () => {
+        if (this.audioElement.duration && !isNaN(this.audioElement.duration)) {
+          this.duration = Math.floor(this.audioElement.duration);
+          this.notify();
+        }
       };
+
       this.audioElement.ontimeupdate = () => {
-        if (this.hasCustomFile && this.isPlaying) {
+        if (this.audioElement && this.isPlaying && !this.isUsingSynth) {
           this.currentTime = this.audioElement.currentTime;
           this.notify();
+        }
+      };
+
+      this.audioElement.onerror = () => {
+        // Try fallback source if primary fails
+        if (this.currentSourceIdx < this.sources.length - 1) {
+          this.currentSourceIdx++;
+          this.audioElement.src = this.sources[this.currentSourceIdx];
+          if (this.isPlaying) {
+            this.audioElement.play().catch(() => this.startSynthFallback());
+          }
+        } else {
+          // If all audio files fail, seamlessly fall back to synthesizer
+          if (this.isPlaying) {
+            this.startSynthFallback();
+          }
         }
       };
     }
@@ -48,59 +84,19 @@ class FriendshipAudioEngine {
 
   subscribe(listener) {
     this.listeners.add(listener);
+    // Initial notification
+    listener(this.currentTime, this.isPlaying, this.volume, this.isMuted);
     return () => this.listeners.delete(listener);
   }
 
   notify() {
-    this.listeners.forEach((fn) => fn(this.currentTime, this.isPlaying));
-  }
-
-  setVolume(vol) {
-    if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setTargetAtTime(vol, this.ctx.currentTime, 0.1);
-    }
-    if (this.audioElement) {
-      this.audioElement.volume = vol;
-    }
-  }
-
-  playNote(freq, startTime, duration, type = 'sine', gainAmt = 0.08) {
-    if (!this.ctx || !this.isPlaying) return;
-    const now = startTime;
-
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    const filter = this.ctx.createBiquadFilter();
-
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, now);
-
-    // Warm acoustic filter
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(800, now);
-    filter.Q.setValueAtTime(1.5, now);
-
-    gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.linearRampToValueAtTime(gainAmt, now + 0.08);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
-
-    osc.start(now);
-    osc.stop(now + duration + 0.1);
-  }
-
-  playFriendshipArpeggio(rootFreqs, now) {
-    // Acoustic guitar-style arpeggiated strum
-    rootFreqs.forEach((freq, idx) => {
-      this.playNote(freq, now + idx * 0.18, 2.8, idx % 2 === 0 ? 'sine' : 'triangle', 0.05);
+    this.listeners.forEach((fn) => {
+      try {
+        fn(this.currentTime, this.isPlaying, this.volume, this.isMuted);
+      } catch (e) {
+        // Safe listener invocation
+      }
     });
-
-    // Gentle high octave harmony note (piano touch)
-    const melodyFreq = rootFreqs[rootFreqs.length - 1] * 1.5;
-    this.playNote(melodyFreq, now + 0.7, 1.8, 'sine', 0.04);
   }
 
   start() {
@@ -108,61 +104,69 @@ class FriendshipAudioEngine {
     if (this.isPlaying) return;
     this.isPlaying = true;
 
-    if (this.hasCustomFile && this.audioElement) {
+    if (this.audioElement) {
+      this.audioElement.volume = this.isMuted ? 0 : this.volume;
       this.audioElement.currentTime = this.currentTime;
-      this.audioElement.play().catch(() => {});
+      this.audioElement.play().then(() => {
+        this.isUsingSynth = false;
+        this.stopSynthFallback();
+      }).catch(() => {
+        // If audio element playback fails (e.g. autoplay block or missing codec), use melodic synth
+        this.startSynthFallback();
+      });
+    } else {
+      this.startSynthFallback();
     }
-
-    // Iconic friendship chord progressions (Tera Yaar Hoon Main / Yaaron Dosti inspired)
-    // F -> C -> Dm -> Bb -> F -> C -> Bb -> C
-    const progression = [
-      [174.61, 220.00, 261.63, 349.23], // F major (Warm acoustic start)
-      [261.63, 329.63, 392.00, 523.25], // C major (Open melody)
-      [220.00, 261.63, 349.23, 440.00], // D minor (Emotional heart)
-      [233.08, 293.66, 349.23, 466.16], // Bb major (Lifting resolve)
-      [174.61, 261.63, 349.23, 440.00], // F higher
-      [196.00, 246.94, 293.66, 392.00], // G/C
-      [220.00, 277.18, 329.63, 440.00], // A
-      [261.63, 329.63, 392.00, 523.25]  // C climax
-    ];
-
-    let chordStep = Math.floor(this.currentTime / 3) % progression.length;
-    if (this.ctx) {
-      this.playFriendshipArpeggio(progression[chordStep], this.ctx.currentTime);
-    }
-
-    this.chordInterval = setInterval(() => {
-      chordStep = (chordStep + 1) % progression.length;
-      if (this.ctx && this.isPlaying) {
-        this.playFriendshipArpeggio(progression[chordStep], this.ctx.currentTime);
-      }
-    }, 3200);
-
-    // Timeline ticker
-    this.timerId = setInterval(() => {
-      this.currentTime += 1;
-      if (this.currentTime >= this.duration) {
-        this.currentTime = 0;
-      }
-      this.notify();
-    }, 1000);
 
     this.notify();
   }
 
   pause() {
     this.isPlaying = false;
-    if (this.timerId) clearInterval(this.timerId);
-    if (this.chordInterval) clearInterval(this.chordInterval);
-    if (this.audioElement && this.hasCustomFile) {
+    if (this.audioElement) {
       this.audioElement.pause();
+    }
+    this.stopSynthFallback();
+    this.notify();
+  }
+
+  toggle() {
+    if (this.isPlaying) {
+      this.pause();
+    } else {
+      this.start();
+    }
+  }
+
+  setVolume(val) {
+    this.volume = Math.max(0, Math.min(1, val));
+    if (this.isMuted && this.volume > 0) {
+      this.isMuted = false;
+    }
+    if (this.audioElement) {
+      this.audioElement.volume = this.isMuted ? 0 : this.volume;
+    }
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume * 0.22, this.ctx.currentTime, 0.05);
+    }
+    this.notify();
+  }
+
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    if (this.audioElement) {
+      this.audioElement.muted = this.isMuted;
+      this.audioElement.volume = this.isMuted ? 0 : this.volume;
+    }
+    if (this.masterGain && this.ctx) {
+      this.masterGain.gain.setTargetAtTime(this.isMuted ? 0 : this.volume * 0.22, this.ctx.currentTime, 0.05);
     }
     this.notify();
   }
 
   seek(seconds) {
     this.currentTime = Math.max(0, Math.min(seconds, this.duration));
-    if (this.audioElement && this.hasCustomFile) {
+    if (this.audioElement && !this.isUsingSynth) {
       this.audioElement.currentTime = this.currentTime;
     }
     this.notify();
@@ -174,6 +178,105 @@ class FriendshipAudioEngine {
       this.start();
     }
   }
+
+  // Melodic fallback synthesizer if audio element is blocked
+  startSynthFallback() {
+    this.isUsingSynth = true;
+    if (this.synthLoopId) return;
+
+    // Iconic Tera Yaar Hoon Main / Friendship Chords
+    const chords = [
+      [293.66, 369.99, 440.00], // D major
+      [220.00, 277.18, 329.63], // A major
+      [246.94, 293.66, 369.99], // B minor
+      [196.00, 246.94, 293.66], // G major
+    ];
+
+    let step = 0;
+    const playNext = () => {
+      if (!this.isPlaying || !this.ctx) return;
+      const now = this.ctx.currentTime;
+      const freqs = chords[step % chords.length];
+      freqs.forEach((freq, idx) => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = idx === 0 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.04, now + idx * 0.15 + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now + idx * 0.15);
+        osc.stop(now + 2.6);
+      });
+      step++;
+      this.currentTime = (this.currentTime + 3) % this.duration;
+      this.notify();
+    };
+
+    playNext();
+    this.synthLoopId = setInterval(playNext, 3000);
+  }
+
+  stopSynthFallback() {
+    this.isUsingSynth = false;
+    if (this.synthLoopId) {
+      clearInterval(this.synthLoopId);
+      this.synthLoopId = null;
+    }
+  }
+
+  // Celebratory bell chime for unlocks, cake, modal clicks
+  playChime() {
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+      gain.gain.setValueAtTime(0.001, now + idx * 0.07);
+      gain.gain.linearRampToValueAtTime(0.08, now + idx * 0.07 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.07 + 0.6);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + idx * 0.07);
+      osc.stop(now + idx * 0.07 + 0.7);
+    });
+  }
+
+  // Birthday candle blowing whoosh effect
+  playCandleBlow() {
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const bufferSize = this.ctx.sampleRate * 0.9;
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(160, now + 0.85);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.18, now + 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+    noise.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    noise.start(now);
+    noise.stop(now + 0.9);
+  }
 }
 
-export const globalFriendshipEngine = new FriendshipAudioEngine();
+export const globalFriendshipEngine = new UnifiedAudioEngine();
