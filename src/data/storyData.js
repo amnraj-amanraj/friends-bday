@@ -2,6 +2,7 @@
  * DHruv.exe — Story & Configuration Data
  * Edit this file to customize text, dates, images, or messages easily!
  */
+import { getAssetUrl } from '../utils/assets';
 
 export const BIRTHDAY_CONFIG = {
   friendName: "Dhruv",
@@ -10,10 +11,10 @@ export const BIRTHDAY_CONFIG = {
   tagline: "THE DAY A LEGEND WAS BORN.",
   birthdayWish: "HAPPY BIRTHDAY, DHRUV! ❤️",
   birthdaySubheading: "Some friendships are not perfect, but the memories are always special.",
-  dhruvPhoto: "/images/dhruv-portrait.jpg",
-  dhruvPasswordPhoto: "/images/dhruv-kurta-portrait.jpg",
-  dhruvKurta: "/images/dhruv-kurta.jpg",
-  dhruvFullPhoto: "/images/classroom-formals.jpg",
+  dhruvPhoto: getAssetUrl("images/dhruv-portrait.jpg"),
+  dhruvPasswordPhoto: getAssetUrl("images/dhruv-kurta-portrait.jpg"),
+  dhruvKurta: getAssetUrl("images/dhruv-kurta.jpg"),
+  dhruvFullPhoto: getAssetUrl("images/classroom-formals.jpg"),
   hiddenSurpriseMessage: "PS: Bhai, birthday party pending hai. Is website se kaam nahi chalega. 😂",
 };
 
@@ -51,7 +52,7 @@ export const TIMELINE_CHAPTERS = [
     funnyCaption: "Plot twist: The characters are finally becoming friends! 😂",
     badge: "SIH — The Plot Twist",
     icon: "Laptop",
-    accentColor: "#a855f7",
+    accentColor: "#0284c7",
     illustrationType: "sih"
   },
   {
@@ -75,7 +76,7 @@ export const GALLERY_PHOTOS = [
     title: "Classroom Formals & Swag",
     tag: "College Formals",
     caption: "Formals pehen ke class attend karne ka alag hi swag tha bhai.",
-    src: "/images/classroom-formals.jpg",
+    src: getAssetUrl("images/classroom-formals.jpg"),
     rotation: -2,
     fallbackGradient: "from-sky-100 to-indigo-100",
     icon: "Users"
@@ -85,7 +86,7 @@ export const GALLERY_PHOTOS = [
     title: "Mess & Dhaba Chronicles",
     tag: "Mess Vibes",
     caption: "Khaane ke baad wo signature thumbs-up pose — pure hostel & dhaba nostalgia!",
-    src: "/images/dhaba-food.jpg",
+    src: getAssetUrl("images/dhaba-food.jpg"),
     rotation: 2.5,
     fallbackGradient: "from-purple-100 to-pink-100",
     icon: "Smile"
@@ -95,7 +96,7 @@ export const GALLERY_PHOTOS = [
     title: "Backbench Lecture Moments",
     tag: "Backbenchers",
     caption: "Assignments pending, par selfie session full on priority.",
-    src: "/images/classroom-upright.jpg",
+    src: getAssetUrl("images/classroom-upright.jpg"),
     rotation: -1.5,
     fallbackGradient: "from-violet-100 to-blue-100",
     icon: "Camera"
@@ -105,7 +106,7 @@ export const GALLERY_PHOTOS = [
     title: "Navrang Festival Memories",
     tag: "Navrang Chapter",
     caption: "Pink kurta, terrace sunsets, aur college ke unforgettable moments.",
-    src: "/images/dhruv-kurta.jpg",
+    src: getAssetUrl("images/dhruv-kurta.jpg"),
     rotation: 1.8,
     fallbackGradient: "from-rose-100 to-amber-100",
     icon: "Sparkles"

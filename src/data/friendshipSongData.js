@@ -2,12 +2,13 @@
  * DHruv.exe — Friendship Song & Timeline Audio Data
  * Dedicated from my side to Dhruv.
  */
+import { getAssetUrl } from '../utils/assets';
 
 export const FRIENDSHIP_SONG = {
   title: "Tera Yaar Hoon Main",
   subtitle: "Dedicated From My Side To Dhruv",
   artist: "Acoustic Friendship Anthem",
-  coverImage: "/images/classroom-formals.jpg",
+  coverImage: getAssetUrl("images/classroom-formals.jpg"),
   totalDuration: 68, // 68 seconds loop
   chapters: [
     {

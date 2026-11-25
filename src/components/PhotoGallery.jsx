@@ -19,6 +19,7 @@ import {
 import confetti from 'canvas-confetti';
 import { MEMORY_PHOTOS, MEMORY_CATEGORIES, HIDDEN_MEMORY_DATA } from '../data/memories';
 import { globalAudioSynth } from './MusicControl';
+import { getAssetUrl } from '../utils/assets';
 
 export default function PhotoGallery() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -544,7 +545,7 @@ export default function PhotoGallery() {
                   >
                     {!photo.isVideo ? (
                       <img
-                        src={hasError ? '/images/classroom-formals.jpg' : photo.src}
+                        src={hasError ? getAssetUrl('images/classroom-formals.jpg') : photo.src}
                         alt={photo.title}
                         loading="lazy"
                         onError={() => handleImageError(photo.id)}
@@ -976,7 +977,7 @@ export default function PhotoGallery() {
               >
                 {!activePhoto.isVideo ? (
                   <img
-                    src={imageErrors[activePhoto.id] ? '/images/classroom-formals.jpg' : activePhoto.src}
+                    src={imageErrors[activePhoto.id] ? getAssetUrl('images/classroom-formals.jpg') : activePhoto.src}
                     alt={activePhoto.title}
                     onError={() => handleImageError(activePhoto.id)}
                     style={{

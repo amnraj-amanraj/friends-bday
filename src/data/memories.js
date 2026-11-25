@@ -3,6 +3,7 @@
  * All real college memories, captions, categories, and settings.
  * Edit, add, or reorder memories here without touching UI code!
  */
+import { getAssetUrl } from '../utils/assets';
 
 export const MEMORY_CATEGORIES = {
   all: {
@@ -30,8 +31,8 @@ export const MEMORY_PHOTOS = [
     caption: "Formals pehen ke class attend karne ka alag hi vibe tha bhai. Notes kam, swag zyada! 😎",
     date: "College Days",
     tag: "College Formals",
-    src: "/images/classroom-formals.jpg",
-    thumbnail: "/images/classroom-formals.jpg",
+    src: getAssetUrl("images/classroom-formals.jpg"),
+    thumbnail: getAssetUrl("images/classroom-formals.jpg"),
     featured: true, // Memory Spotlight image
     spotlightTitle: "If I Could Relive One Moment...",
     spotlightSubtitle: "Classroom, formals, tie, and that classic Dhruv smile — memories that define college.",
@@ -47,8 +48,8 @@ export const MEMORY_PHOTOS = [
     caption: "Khaane ke baad wo signature thumbs-up pose — pure hostel & dhaba nostalgia!",
     date: "Lunch Break",
     tag: "Mess Chronicles",
-    src: "/images/dhaba-food.jpg",
-    thumbnail: "/images/dhaba-food.jpg",
+    src: getAssetUrl("images/dhaba-food.jpg"),
+    thumbnail: getAssetUrl("images/dhaba-food.jpg"),
     featured: false,
     rotation: 2.8,
     aspect: "landscape",
@@ -62,8 +63,8 @@ export const MEMORY_PHOTOS = [
     caption: "Assignments pending, test agle din, par camera on hote hi hero ban jana zaroori tha! 😂",
     date: "Lecture Hall",
     tag: "Backbenchers",
-    src: "/images/classroom-upright.jpg",
-    thumbnail: "/images/classroom-upright.jpg",
+    src: getAssetUrl("images/classroom-upright.jpg"),
+    thumbnail: getAssetUrl("images/classroom-upright.jpg"),
     featured: false,
     rotation: -1.8,
     aspect: "landscape",
@@ -77,8 +78,8 @@ export const MEMORY_PHOTOS = [
     caption: "Terrace sunsets, pink kurta, aur college ke unforgettable moments.",
     date: "Festive Vibes",
     tag: "Navrang Chapter",
-    src: "/images/dhruv-kurta.jpg",
-    thumbnail: "/images/dhruv-kurta-portrait.jpg",
+    src: getAssetUrl("images/dhruv-kurta.jpg"),
+    thumbnail: getAssetUrl("images/dhruv-kurta-portrait.jpg"),
     featured: false,
     rotation: 2.2,
     aspect: "portrait",
@@ -92,9 +93,9 @@ export const MEMORY_PHOTOS = [
     caption: "Camera chalu karte hi real college banter and candid laughters. Truly unscripted!",
     date: "Candid Video",
     tag: "Live Video",
-    src: "/videos/memory-video.mp4",
+    src: getAssetUrl("videos/memory-video.mp4"),
     isVideo: true,
-    thumbnail: "/images/classroom-formals.jpg",
+    thumbnail: getAssetUrl("images/classroom-formals.jpg"),
     featured: false,
     rotation: -1.5,
     aspect: "landscape",

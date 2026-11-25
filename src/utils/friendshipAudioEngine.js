@@ -4,6 +4,8 @@
  * Web Audio synthesizers, chime effects, and sound control.
  */
 
+import { getAssetUrl } from './assets';
+
 class UnifiedAudioEngine {
   constructor() {
     this.ctx = null;
@@ -20,10 +22,8 @@ class UnifiedAudioEngine {
 
     // Available audio sources in priority order
     this.sources = [
-      '/audio/tera-yaar-hoon-main.wav',
-      '/audio/tera-yaar-hoon-main.mp3',
-      '/audio/friendship-song.mp3',
-      '/audio/birthday.mp3'
+      getAssetUrl('audio/tera-yaar-hoon-main.wav'),
+      getAssetUrl('audio/tera-yaar-hoon-main.mp3')
     ];
     this.currentSourceIdx = 0;
   }
